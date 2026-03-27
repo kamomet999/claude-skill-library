@@ -56,3 +56,9 @@
 | pdf | PDF操作全般。読取、抽出、結合、分割、作成、暗号化、OCR | pdf, extract, merge, ocr |
 | project-guidelines-example | プロジェクト固有スキルのテンプレート例 | template, example, guidelines |
 | skill-finder | 会話文脈から最適スキル推論・ランク付け提案 | skill, search, recommend, context |
+| skill-library | GitHubライブラリのcatalog.md辞書検索、ローカルにないスキル発見 | skill, library, catalog, search |
+| skill-pull | ライブラリからローカルへスキル取得 | skill, install, pull |
+| skill-unload | 使い終わったスキルをローカルから削除、コンテキスト節約 | skill, cleanup, unload |
+| skill-manager | スキル1軍/2軍/3軍/育成を管理するGM、週次昇降格 | skill, management, roster, gm |
+| skill-evaluate | 5軸評価（KPI+360度+コンピテンシー+ポテンシャル+市場価値）で査定 | skill, evaluation, scoring, hr |
+| skill-retro | セッション完了時にスキル有効性検証、改善提案レポート出力 | skill, retro, review, report |
