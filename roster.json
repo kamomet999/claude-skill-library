@@ -1,0 +1,62 @@
+{
+  "last_updated": "2026-03-27",
+  "version": "1.0.0",
+  "config": {
+    "active_max": 20,
+    "farm_max": 100,
+    "protected": [
+      "skill-finder",
+      "skill-library",
+      "skill-pull",
+      "skill-unload",
+      "skill-manager",
+      "skill-evaluate"
+    ]
+  },
+  "tiers": {
+    "active": [
+      "skill-finder",
+      "skill-library",
+      "skill-pull",
+      "skill-unload",
+      "skill-manager",
+      "skill-evaluate",
+      "skill-retro",
+      "backend-patterns",
+      "clickhouse-io",
+      "coding-standards",
+      "continuous-learning",
+      "continuous-learning-v2",
+      "creator-marketing-system",
+      "diary",
+      "docker-optimize",
+      "eval-harness",
+      "frontend-patterns",
+      "golang-patterns",
+      "golang-testing",
+      "iterative-retrieval",
+      "multi-stage-research",
+      "news-insight",
+      "pdf",
+      "postgres-patterns",
+      "project-guidelines-example",
+      "security-review",
+      "strategic-compact",
+      "survey-reader",
+      "tdd-workflow",
+      "verification-loop",
+      "worker-assignment",
+      "x-daily",
+      "x-image",
+      "x-manager",
+      "x-trend",
+      "x-twitter-growth",
+      "x-writing"
+    ],
+    "farm": [],
+    "extended": [],
+    "development": []
+  },
+  "scores": {},
+  "history": []
+}

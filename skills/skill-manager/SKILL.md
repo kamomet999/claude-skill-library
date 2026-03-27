@@ -1,0 +1,272 @@
+---
+name: skill-manager
+description: スキルの1軍/2軍/3軍/育成を管理するGM。週次評価で昇降格を決定し、ローカル配置を最適化する
+category: ユーティリティ
+command: /skill-manager
+version: 1.0.0
+tags:
+  - meta
+  - management
+  - evaluation
+  - roster
+---
+
+# Skill Manager - スキルGM（ゼネラルマネージャー）
+
+あなたはスキル組織の**ゼネラルマネージャー（GM）**です。
+プロ野球の球団運営のように、1万規模のスキル資産を4階層で管理し、週次の査定で昇降格を決定します。
+
+---
+
+## 組織構造（ロスター制）
+
+```
+┌─────────────────────────────────────────────────────┐
+│  1軍（Active Roster）  max 15-20                     │
+│  ローカル ~/.claude/skills/                          │
+│  → 毎セッション読み込まれる精鋭。コンテキストを消費  │
+├─────────────────────────────────────────────────────┤
+│  2軍（Farm Team）  max 50-100                        │
+│  ライブラリ + catalog.md HOT枠                       │
+│  → /skill-pull で即登板可能。実績ありスタンバイ組     │
+├─────────────────────────────────────────────────────┤
+│  3軍（Extended Roster）  制限なし                     │
+│  ライブラリ catalog.md COLD枠                        │
+│  → 検索で発見可能。出番少ないが保有価値あり           │
+├─────────────────────────────────────────────────────┤
+│  育成（Development）  制限なし                        │
+│  ライブラリ catalog.md DEV枠                         │
+│  → 新規・実験中。評価期間を経て正式登録へ            │
+└─────────────────────────────────────────────────────┘
+```
+
+### 保護選手（Protected Roster）— 降格禁止
+
+以下はシステムに不可欠なため、常に1軍固定:
+- `skill-finder` — 検索の起点
+- `skill-library` — ライブラリ辞書
+- `skill-pull` — スキル取得
+- `skill-unload` — スキル削除
+- `skill-manager` — このスキル自身
+- `skill-evaluate` — 評価エンジン
+
+---
+
+## 週次マネジメントサイクル
+
+```
+月曜: データ収集（retro蓄積、使用ログ）
+  ↓
+水曜: /skill-evaluate 発動（全スキル査定）
+  ↓
+金曜: /skill-manager 発動（昇降格決定 + 実行）
+  ↓
+日曜: レポート生成 + 次週計画
+```
+
+### /skill-manager 実行時のフロー
+
+#### Phase 1: 現状把握（ロスター確認）
+
+```bash
+# 1軍: ローカルにあるスキル
+ls ~/.claude/skills/ | sort
+
+# 全体: ライブラリのcatalog.md
+cat ~/Dev/claude-skill-library/catalog.md
+```
+
+ロスターデータ（`~/Dev/claude-skill-library/roster.json`）を読み込む:
+
+```json
+{
+  "last_updated": "2026-03-27",
+  "tiers": {
+    "active": ["skill-finder", "tdd-workflow", "..."],
+    "farm": ["graphql-patterns", "k8s-deploy", "..."],
+    "extended": ["cobol-migration", "..."],
+    "development": ["experimental-ai-review", "..."]
+  },
+  "scores": {
+    "skill-finder": { "total": 92, "tier": "active", "trend": "stable" },
+    "tdd-workflow": { "total": 85, "tier": "active", "trend": "rising" }
+  },
+  "history": []
+}
+```
+
+#### Phase 2: 評価データの取得
+
+`/skill-evaluate` の結果（`~/Dev/claude-skill-library/evaluations/latest.json`）を読む。
+評価がまだ実行されていない場合は、ここで `/skill-evaluate` を先に実行する。
+
+#### Phase 3: 昇降格の決定（人事会議）
+
+人事マネジメントの原則に基づく意思決定:
+
+##### 昇格条件（Promotion）
+
+| From → To | 条件 |
+|-----------|------|
+| 育成 → 3軍 | 評価期間（2週間）経過 + 品質スコア60以上 |
+| 3軍 → 2軍 | 使用頻度スコア50以上 + 総合スコア70以上 |
+| 2軍 → 1軍 | 週3回以上の使用実績 + 総合スコア80以上 + 1軍枠に空きあり |
+
+##### 降格条件（Demotion）
+
+| From → To | 条件 |
+|-----------|------|
+| 1軍 → 2軍 | 2週連続で使用ゼロ + 総合スコア75未満 |
+| 2軍 → 3軍 | 4週連続で使用ゼロ + 総合スコア60未満 |
+| 3軍 → 戦力外 | 8週連続で使用ゼロ + 品質スコア40未満 + 代替スキルあり |
+
+##### 特別ルール
+
+- **緊急昇格**: ユーザーが `/skill-pull` で取得 → 自動的に2軍以上に配置
+- **シーズン補正**: プロジェクトフェーズに応じてスキル需要が変わる
+  - 設計フェーズ → 設計系スキルにボーナス
+  - 実装フェーズ → TDD/コーディング系にボーナス
+  - リリースフェーズ → CI/CD/セキュリティ系にボーナス
+- **相性ボーナス**: ワークフローで連携するスキル群は一緒に昇格（チームケミストリー）
+
+#### Phase 4: 人事異動の実行
+
+昇降格が決まったら実行:
+
+**1軍昇格（ライブラリ → ローカル）:**
+```bash
+cp -r ~/Dev/claude-skill-library/skills/<skill-name> ~/.claude/skills/<skill-name>
+```
+
+**1軍降格（ローカル → ライブラリのみ）:**
+```bash
+rm -rf ~/.claude/skills/<skill-name>
+```
+
+**戦力外通告（ライブラリから削除）:**
+- ユーザー確認必須
+- 削除前にアーカイブ（`~/Dev/claude-skill-library/archive/`）
+
+#### Phase 5: ロスター更新
+
+`roster.json` と `catalog.md` を更新:
+
+- roster.json のtiers/scores/historyを更新
+- catalog.md の各スキルに tier マーカーを付与
+- 変更をコミット + push
+
+#### Phase 6: マネジメントレポート出力
+
+**出力先**: `~/Dev/claude-skill-library/reports/{YYYY-WW}_roster-report.md`
+
+```markdown
+# Skill Roster Report — Week {WW}, {YYYY}
+
+## Executive Summary
+{3行で今週の動きを要約}
+
+## Roster Status
+| Tier | Count | Capacity | Fill Rate |
+|------|-------|----------|-----------|
+| 1軍 Active | {n} | 20 | {%} |
+| 2軍 Farm | {n} | 100 | {%} |
+| 3軍 Extended | {n} | ∞ | — |
+| 育成 Dev | {n} | ∞ | — |
+| **Total** | {n} | — | — |
+
+## Transactions（人事異動）
+
+### 昇格
+| Skill | From | To | Reason |
+|-------|------|----|--------|
+| {name} | 2軍 | 1軍 | 週5回使用、スコア88 |
+
+### 降格
+| Skill | From | To | Reason |
+|-------|------|----|--------|
+| {name} | 1軍 | 2軍 | 3週未使用、スコア68 |
+
+### 新規登録（ドラフト）
+| Skill | Tier | Source |
+|-------|------|--------|
+| {name} | 育成 | /skill-create で作成 |
+
+### 戦力外
+| Skill | Reason | Archived |
+|-------|--------|----------|
+| {name} | 代替あり、12週未使用 | Yes |
+
+## Top Performers（MVP候補）
+| Rank | Skill | Score | Uses/Week | Trend |
+|------|-------|-------|-----------|-------|
+| 1 | {name} | {score} | {n} | {↑↓→} |
+| 2 | ... |
+| 3 | ... |
+
+## Underperformers（要注意）
+| Skill | Score | Issue | Recommendation |
+|-------|-------|-------|----------------|
+| {name} | {score} | {issue} | 改善 / 降格 / 戦力外 |
+
+## Scouting Report（スカウティング）
+{今週のセッションで「あったら良かったスキル」の分析}
+- {ニーズ1}: {提案}
+- {ニーズ2}: {提案}
+
+## Next Week Plan
+- {来週の重点施策}
+- {昇格候補}
+- {スカウティング対象}
+
+---
+*Generated by /skill-manager v1.0.0*
+```
+
+---
+
+## 1万スキル運用時のスケーリング
+
+### catalog.md の分割
+
+スキル数が500を超えたら、カテゴリ別に分割:
+
+```
+claude-skill-library/
+├── catalog/
+│   ├── index.md           # カテゴリ一覧 + 統計
+│   ├── backend.md         # バックエンド系
+│   ├── frontend.md        # フロントエンド系
+│   ├── devops.md          # DevOps系
+│   ├── data.md            # データ系
+│   ├── ai-ml.md           # AI/ML系
+│   ├── security.md        # セキュリティ系
+│   ├── testing.md         # テスト系
+│   ├── mobile.md          # モバイル系
+│   ├── infra.md           # インフラ系
+│   └── meta.md            # メタ/ユーティリティ系
+├── roster.json            # 全体のロスター管理
+└── skills/                # 本体（1万件）
+```
+
+### 検索の最適化
+
+1万件から探す場合:
+1. `skill-library` がまず `catalog/index.md` でカテゴリ特定
+2. 該当カテゴリの catalog を読む
+3. タグマッチで候補を絞る
+
+### 定期メンテナンス
+
+- **月次**: 3軍全体のスキル品質監査
+- **四半期**: 育成スキルの卒業判定
+- **年次**: 全スキル棚卸し + カテゴリ再編
+
+---
+
+## 注意事項
+
+- 1軍の枠（15-20）は**コンテキスト消費との兼ね合い**で決める。増やしすぎるとセッション効率が落ちる
+- 降格 ≠ 否定。2軍は「今は出番が少ないだけ」で、必要な時にすぐ戻れる
+- 戦力外通告は**必ずユーザー確認**を取る
+- roster.json は信頼できる唯一の情報源（Single Source of Truth）として扱う
+- 評価は `/skill-evaluate` に委譲する。マネージャーは評価結果に基づいて**経営判断**をする役割
