@@ -57,7 +57,7 @@ cp -r ~/Dev/claude-skill-library/skills/<skill-name> ~/.claude/skills/<skill-nam
 ```bash
 # スキルのSKILL.mdをfetch
 mkdir -p ~/.claude/skills/<skill-name>
-curl -sL "https://raw.githubusercontent.com/taiki-horaguchi-alt/claude-skill-library/master/skills/<skill-name>/SKILL.md" \
+curl -sL "https://raw.githubusercontent.com/kamomet999/claude-skill-library/master/skills/<skill-name>/SKILL.md" \
   -o ~/.claude/skills/<skill-name>/SKILL.md
 ```
 

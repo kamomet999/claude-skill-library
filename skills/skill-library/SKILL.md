@@ -17,7 +17,7 @@ tags:
 
 ## 前提
 
-- ライブラリリポジトリ: `https://github.com/taiki-horaguchi-alt/claude-skill-library`
+- ライブラリリポジトリ: `https://github.com/kamomet999/claude-skill-library`
 - カタログファイル: `catalog.md`（スキル名+説明+タグの軽量辞書）
 - スキル本体: `skills/<skill-name>/SKILL.md`
 
@@ -26,7 +26,7 @@ tags:
 WebFetchでcatalog.mdを取得する:
 
 ```
-URL: https://raw.githubusercontent.com/taiki-horaguchi-alt/claude-skill-library/master/catalog.md
+URL: https://raw.githubusercontent.com/kamomet999/claude-skill-library/master/catalog.md
 ```
 
 もしローカルにキャッシュがあれば（`~/Dev/claude-skill-library/catalog.md`）そちらを優先。
